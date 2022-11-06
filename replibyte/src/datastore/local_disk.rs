@@ -180,10 +180,13 @@ impl Datastore for LocalDisk {
     ) -> Result<(), Error> {
         let mut index_file = self.index_file()?;
         let dump = index_file.find_dump(options)?;
-        let entries = read_dir(format!("{}/{}", self.dir, dump.directory_name))?;
+        let dump_directory_name = format!("{}/{}", self.dir, dump.directory_name);
+        let mut sorted_entries: Vec<_> = read_dir(dump_directory_name).unwrap()
+                                            .map(|r| r.unwrap())
+                                            .collect();
+        sorted_entries.sort_by_key(|dir| dir.path());
 
-        for entry in entries {
-            let entry = entry?;
+        for entry in sorted_entries {
             let data = read(entry.path())?;
 
             // decrypt data?
